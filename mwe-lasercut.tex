@@ -1,0 +1,90 @@
+\documentclass[11pt, oneside]{article}
+% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage[paperheight=85cm,paperwidth=85cm, margin = .5cm, top = .5cm]{geometry}
+
+% Cutting deck size is defined above: the laser cutter I have access to is a 300x600mm model. I added the .5cm margins to keep things workable.
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{tikz}
+
+% The laser needs lines to have two properties to be able to cut along them.
+% 1) They need to be pure red:
+\definecolor{RedCut}{HTML}{FF0000}
+
+% By not compressing the PDF, you can examine the file with a text editor and make sure that the lines are the right width. Not strictly necessary.
+\pdfcompresslevel=0
+\pdfobjcompresslevel=0
+
+\begin{document}
+% Make every line drawn by the program exactly 0.01pt wide. The weird number used below is because there's some rescaling that happens between Tikz and Tex. It's one of those *magic* numbers.
+% \tikzset{every picture/.style={line width=0.01004pt}}
+\tikzset{every picture/.style={line width=2pt}}
+
+% I don't need my pages to be numbered--it'll only confuse the printer.
+\pagenumbering{gobble}
+
+% You can define new macros/variables:
+% \pgfmathsetmacro{\leg}{24*2.54}
+% \pgfmathsetmacro{\inner}{25/3*2*tan(30)} % trig functions evaluate in degrees.
+\pgfmathsetmacro{\innermost}{21.75*2.54/2}
+\pgfmathsetmacro{\inner}{26.5*2.54/2}
+\pgfmathsetmacro{\outer}{30*2.54/2}
+\pgfmathsetmacro{\post}{2*2.54/2}
+\pgfmathsetmacro{\collar}{3*2.54/2}
+\pgfmathsetmacro{\dcollar}{\collar-\post}
+\pgfmathsetmacro{\fromedge}{3.375*2.54}
+\pgfmathsetmacro{\springA}{2.5*2.54}
+\pgfmathsetmacro{\springB}{2.375*2.54}
+\pgfmathsetmacro{\Nsprings}{52}
+\pgfmathsetmacro{\springev}{360/\Nsprings}
+\pgfmathsetmacro{\circum}{sqrt(2)*2.54*15}
+\pgfmathsetmacro{\rpost}{\circum-sqrt(2)*\fromedge}
+
+\pgfmathsetmacro{\OutThetSpan}{60}
+
+\pgfmathsetmacro{\StarcX}{\outer*cos(90-\OutThetSpan/2)}
+\pgfmathsetmacro{\StarcY}{\outer*sin(90-\OutThetSpan/2)}
+
+\pgfmathsetmacro{\SmRad}{sqrt((\outer-\fromedge-\StarcX)^2+(\outer-\fromedge-\StarcY)^2)}
+% \pgfmathsetmacro{\SmRad}{4.3451*2.54}
+\pgfmathsetmacro{\DAngle}{sin(90-\OutThetSpan-45)}
+\pgfmathsetmacro{\RadRat}{\outer/\SmRad}
+\pgfmathsetmacro{\SmAngle}{asin(\RadRat*\DAngle)-180}
+
+% \pgfmathsetmacro{\SmAngle}{0+asin((\outer/\SmRad)*sin(45-\OutThetSpan/2))}
+
+% The drawing syntax is well documented, and StackOverflow is full of examples.
+\begin{tikzpicture}
+
+% \draw[color=cyan] (0in,0in) rectangle (2*\outer, 2*\outer);
+
+% \draw[color=RedCut] (\leg/2, \leg/2) circle (\leg/2);
+
+% \draw[color=RedCut] (\leg/2-\inner/2,\leg/2-\inner) rectangle ++(\inner,2*\inner);
+
+\draw[color=RedCut] (\outer, \outer) circle(\innermost);
+
+% \draw[color=RedCut] (\outer, \outer) circle(\inner);
+
+\draw[color=RedCut] \foreach \x in {0,...,3} {(\outer, \outer) ++(\x*90-\OutThetSpan/2:\outer) arc(\x*90-\OutThetSpan/2:\x*90+\OutThetSpan/2:\outer) };
+
+\draw[color=RedCut] \foreach \x in {0,...,\Nsprings} {(\outer, \outer) ++(\x*\springev:\inner) arc(\x*\springev:\x*\springev+5:\inner) arc(\x*\springev+95:\x*\springev+185:\springB) arc(\x*\springev+185:\x*\springev+5:\springB/2-\springA/2) arc(\x*\springev-175:\x*\springev-265:\springA) arc(\x*\springev+5:\x*\springev+10:\inner)};
+
+% \draw[color=black] (\outer, \outer) circle(\rpost);
+
+%\draw[color=RedCut] \foreach \x/\y/\z/\zz in {1/0/-1/1,0/1/1/-1,1/1/-1/-1,0/0/1/1} {(2*\x*\outer+\z*\fromedge, 2*\y*\outer+\zz*\fromedge) circle(\post)};
+
+\draw[color=RedCut] \foreach \x in {0,...,3} {(\outer, \outer) ++(45+\x*90:\rpost) circle(\post)};
+
+\draw[color=RedCut] \foreach \x in {0,...,3} {(\outer, \outer) ++(45+\x*90:\inner) --++(45+\x*90:\rpost-\inner-\post-\dcollar) ++(45+\x*90:2*\collar) --++(45+\x*90:\circum-\rpost-\collar)};
+
+\draw[color=RedCut] \foreach \x in {0,...,3} {(\outer, \outer) ++(45+\x*90:\rpost+\collar) arc(\x*90+45:\x*90+135:\collar) arc(\x*90+45:\x*90+305:\collar) arc(\x*90-215:\x*90+45:\collar) arc(\x*90-45:\x*90+45:\collar)};
+
+\draw[color=RedCut] \foreach \x/\y/\z in {0/1/0,1/1/1,2/0/1,3/0/0} {(\outer, \outer) ++(\x*90-\OutThetSpan/2:\outer) --(2*\y*\outer, 2*\z*\outer)};
+
+\draw[color=RedCut] \foreach \x/\y/\z in {3/1/0,0/1/1,1/0/1,2/0/0} {(\outer, \outer) ++(\x*90+\OutThetSpan/2:\outer) --(2*\y*\outer, 2*\z*\outer)};
+
+\end{tikzpicture}
+
+\end{document}
